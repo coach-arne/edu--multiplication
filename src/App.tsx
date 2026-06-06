@@ -12,7 +12,8 @@ const App = () => {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/select" element={<TableSelectPage />} />
+          <Route path="/select/:category" element={<TableSelectPage />} />
+          <Route path="/select" element={<Navigate to="/" replace />} />
           <Route path="/practice" element={<PracticePage />} />
           <Route path="/summary" element={<SessionSummaryPage />} />
           <Route path="/progress" element={<ProgressPage />} />

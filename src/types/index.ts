@@ -4,15 +4,23 @@ export type TableStats = {
   total: number
 }
 
+export type OperationCategory = 'multiplication' | 'division'
+
+export type CategoryStats = {
+  multiplication: Record<number, TableStats>
+  division: Record<number, TableStats>
+}
+
 export type UserProgress = {
   level: number
   title: string
   totalPoints: number
   xpTowardsNextLevel: number
-  tableStats: Record<number, TableStats>
+  categoryStats: CategoryStats
 }
 
 export type Question = {
+  operation: OperationCategory
   factorA: number
   factorB: number
   correctAnswer: number

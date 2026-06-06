@@ -1,19 +1,23 @@
 import { atom } from 'jotai'
-import { atomWithStorage } from 'jotai/utils'
+import { atomWithStorage, createJSONStorage } from 'jotai/utils'
 import type { UserProgress } from '@/types'
-import { getTitleForLevel } from '@/data/levels'
+import { createDefaultUserProgress, migrateUserProgress } from '@/lib/storage'
 
-const DEFAULT_PROGRESS: UserProgress = {
-  level: 1,
-  title: getTitleForLevel(1),
-  totalPoints: 0,
-  xpTowardsNextLevel: 0,
-  tableStats: {},
-}
+const storage = createJSONStorage<UserProgress>(() => localStorage)
 
 export const userProgressAtom = atomWithStorage<UserProgress>(
   'maaltafels-progress',
-  DEFAULT_PROGRESS,
+  createDefaultUserProgress(),
+  {
+    ...storage,
+    getItem: (key, initialValue) => {
+      const stored = storage.getItem(key, initialValue)
+      return migrateUserProgress(stored)
+    },
+    setItem: (key, value) => {
+      storage.setItem(key, migrateUserProgress(value))
+    },
+  },
 )
 
 export const currentLevelAtom = atom((get) => get(userProgressAtom).level)

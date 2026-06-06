@@ -1,6 +1,8 @@
 import { atom } from 'jotai'
-import type { Question, SessionStats } from '@/types'
+import type { OperationCategory, Question, SessionStats } from '@/types'
 import { QUESTIONS_PER_SESSION } from '@/data/scoring'
+
+export const operationCategoryAtom = atom<OperationCategory>('multiplication')
 
 export const selectedTablesAtom = atom<number[]>([])
 

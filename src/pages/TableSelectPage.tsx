@@ -1,20 +1,24 @@
 import { useAtom } from 'jotai'
-import { useNavigate } from 'react-router-dom'
-import { selectedTablesAtom, sessionQuestionsAtom, currentQuestionIndexAtom, sessionScoreAtom, streakAtom, sessionStatsAtom } from '@/atoms/sessionAtom'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
+import { selectedTablesAtom } from '@/atoms/sessionAtom'
 import AppLayout from '@/components/layout/AppLayout'
 import TableSelector from '@/components/tables/TableSelector'
 import { Button } from '@/components/ui/button'
-import { generateSession } from '@/lib/questions'
+import { getCategoryConfig, isOperationCategory } from '@/data/categories'
+import { useStartSession } from '@/hooks/useStartSession'
 import { QUESTIONS_PER_SESSION } from '@/data/scoring'
 
 const TableSelectPage = () => {
   const navigate = useNavigate()
+  const { category: categoryParam } = useParams()
   const [selectedTables, setSelectedTables] = useAtom(selectedTablesAtom)
-  const [, setSessionQuestions] = useAtom(sessionQuestionsAtom)
-  const [, setCurrentQuestionIndex] = useAtom(currentQuestionIndexAtom)
-  const [, setSessionScore] = useAtom(sessionScoreAtom)
-  const [, setStreak] = useAtom(streakAtom)
-  const [, setSessionStats] = useAtom(sessionStatsAtom)
+  const startSession = useStartSession()
+
+  if (!categoryParam || !isOperationCategory(categoryParam)) {
+    return <Navigate to="/" replace />
+  }
+
+  const category = getCategoryConfig(categoryParam)
 
   const toggleTable = (table: number) => {
     setSelectedTables((prev) =>
@@ -30,23 +34,8 @@ const TableSelectPage = () => {
     setSelectedTables([])
   }
 
-  const startSession = () => {
-    if (selectedTables.length === 0) return
-
-    const questions = generateSession(selectedTables, QUESTIONS_PER_SESSION)
-    setSessionQuestions(questions)
-    setCurrentQuestionIndex(0)
-    setSessionScore(0)
-    setStreak(0)
-    setSessionStats({
-      correct: 0,
-      wrong: 0,
-      hintsUsed: 0,
-      totalQuestions: QUESTIONS_PER_SESSION,
-      totalPointsEarned: 0,
-    })
-
-    navigate('/practice')
+  const handleStartSession = () => {
+    startSession(categoryParam, selectedTables)
   }
 
   const allSelected = selectedTables.length === 10
@@ -66,8 +55,8 @@ const TableSelectPage = () => {
         </div>
 
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-amber-800">Kies je tafels</h1>
-          <p className="text-amber-600 mt-1">Selecteer welke tafels je wilt oefenen</p>
+          <h1 className="text-3xl font-bold text-amber-800">{category.selectTitle}</h1>
+          <p className="text-amber-600 mt-1">{category.selectSubtitle}</p>
         </div>
 
         <TableSelector selectedTables={selectedTables} onToggle={toggleTable} />
@@ -83,7 +72,8 @@ const TableSelectPage = () => {
           </Button>
           <div className="flex-1 flex items-center justify-center">
             <span className="text-amber-600 text-sm font-medium">
-              {selectedTables.length} tafel{selectedTables.length !== 1 ? 's' : ''} geselecteerd
+              {selectedTables.length} {category.labelSingular.toLowerCase()}
+              {selectedTables.length !== 1 ? 's' : ''} geselecteerd
             </span>
           </div>
         </div>
@@ -91,11 +81,11 @@ const TableSelectPage = () => {
         <div className="mt-auto">
           <Button
             size="lg"
-            onClick={startSession}
+            onClick={handleStartSession}
             disabled={selectedTables.length === 0}
             className="w-full h-20 text-2xl font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-lg disabled:opacity-40 active:scale-95 transition-transform"
           >
-            ⚔️ Start ({QUESTIONS_PER_SESSION} vragen)
+            Start ({QUESTIONS_PER_SESSION} vragen)
           </Button>
         </div>
       </div>

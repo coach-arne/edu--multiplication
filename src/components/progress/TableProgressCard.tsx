@@ -4,9 +4,10 @@ import { Progress } from '@/components/ui/progress'
 type TableProgressCardProps = {
   table: number
   stats: TableStats
+  labelPrefix: string
 }
 
-const TableProgressCard = ({ table, stats }: TableProgressCardProps) => {
+const TableProgressCard = ({ table, stats, labelPrefix }: TableProgressCardProps) => {
   const accuracy = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0
 
   const getAccuracyColor = () => {
@@ -18,10 +19,10 @@ const TableProgressCard = ({ table, stats }: TableProgressCardProps) => {
   return (
     <div className="bg-white rounded-2xl border border-amber-100 p-3 shadow-sm">
       <div className="flex items-center justify-between mb-2">
-        <span className="font-bold text-amber-800 text-base">Tafel van {table}</span>
-        <span className={`font-bold text-sm ${getAccuracyColor()}`}>
-          {accuracy}%
+        <span className="font-bold text-amber-800 text-base">
+          {labelPrefix} {table}
         </span>
+        <span className={`font-bold text-sm ${getAccuracyColor()}`}>{accuracy}%</span>
       </div>
       <Progress value={accuracy} className="h-2 bg-amber-50" />
       <p className="text-xs text-amber-400 mt-1">

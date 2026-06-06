@@ -1,12 +1,15 @@
+import type { Question } from '@/types'
 import { cn } from '@/lib/utils'
+import { getHintMatrixFactors } from '@/lib/formatQuestion'
 
 type HintMatrixProps = {
-  factorA: number
-  factorB: number
+  question: Question
   onClose: () => void
 }
 
-const HintMatrix = ({ factorA, factorB, onClose }: HintMatrixProps) => {
+const HintMatrix = ({ question, onClose }: HintMatrixProps) => {
+  const { row, col, subtitle } = getHintMatrixFactors(question)
+
   return (
     <div
       className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
@@ -19,9 +22,7 @@ const HintMatrix = ({ factorA, factorB, onClose }: HintMatrixProps) => {
         <div className="flex justify-between items-center mb-3">
           <div>
             <h2 className="text-lg font-bold text-amber-800">Maaltafelmatrix</h2>
-            <p className="text-xs text-amber-500">
-              {factorA} × {factorB} = {factorA * factorB}
-            </p>
+            <p className="text-xs text-amber-500">{subtitle}</p>
           </div>
           <button
             onClick={onClose}
@@ -36,52 +37,52 @@ const HintMatrix = ({ factorA, factorB, onClose }: HintMatrixProps) => {
             <thead>
               <tr>
                 <th className="p-1 bg-amber-100 text-amber-600 rounded font-bold">×</th>
-                {Array.from({ length: 10 }, (_, i) => i + 1).map((col) => (
+                {Array.from({ length: 10 }, (_, i) => i + 1).map((column) => (
                   <th
-                    key={col}
+                    key={column}
                     className={cn(
                       'p-1 font-bold rounded',
-                      col === factorB
+                      column === col
                         ? 'bg-amber-500 text-white'
                         : 'bg-amber-100 text-amber-600',
                     )}
                   >
-                    {col}
+                    {column}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {Array.from({ length: 10 }, (_, i) => i + 1).map((row) => (
-                <tr key={row}>
+              {Array.from({ length: 10 }, (_, i) => i + 1).map((matrixRow) => (
+                <tr key={matrixRow}>
                   <th
                     className={cn(
                       'p-1 font-bold rounded',
-                      row === factorA
+                      matrixRow === row
                         ? 'bg-amber-500 text-white'
                         : 'bg-amber-100 text-amber-600',
                     )}
                   >
-                    {row}
+                    {matrixRow}
                   </th>
-                  {Array.from({ length: 10 }, (_, j) => j + 1).map((col) => {
-                    const isHighlighted = row === factorA && col === factorB
-                    const isRowHighlight = row === factorA
-                    const isColHighlight = col === factorB
+                  {Array.from({ length: 10 }, (_, j) => j + 1).map((column) => {
+                    const isHighlighted = matrixRow === row && column === col
+                    const isRowHighlight = matrixRow === row
+                    const isColHighlight = column === col
 
                     return (
                       <td
-                        key={col}
+                        key={column}
                         className={cn(
                           'p-1 rounded transition-colors font-medium',
                           isHighlighted
                             ? 'bg-green-500 text-white font-bold text-sm ring-2 ring-green-300'
                             : isRowHighlight || isColHighlight
-                            ? 'bg-amber-100 text-amber-700'
-                            : 'text-gray-600 hover:bg-gray-50',
+                              ? 'bg-amber-100 text-amber-700'
+                              : 'text-gray-600 hover:bg-gray-50',
                         )}
                       >
-                        {row * col}
+                        {matrixRow * column}
                       </td>
                     )
                   })}

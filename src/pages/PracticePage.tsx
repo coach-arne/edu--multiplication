@@ -21,6 +21,7 @@ import HintMatrix from '@/components/tables/HintMatrix'
 import LevelUpOverlay from '@/components/progress/LevelUpOverlay'
 import { Button } from '@/components/ui/button'
 import { calculatePoints, applyXpGain } from '@/lib/scoring'
+import { getTableKeyForQuestion } from '@/lib/formatQuestion'
 import { QUESTIONS_PER_SESSION } from '@/data/scoring'
 
 const PracticePage = () => {
@@ -88,24 +89,31 @@ const PracticePage = () => {
       setSessionStats(newStats)
 
       const result = applyXpGain(userProgress, points)
-      const updatedTableStats = { ...userProgress.tableStats }
-
-      if (question) {
-        const tableKey = question.factorA
-        const existing = updatedTableStats[tableKey] ?? { correct: 0, incorrect: 0, total: 0 }
-        updatedTableStats[tableKey] = {
-          correct: existing.correct + (correct ? 1 : 0),
-          incorrect: existing.incorrect + (correct ? 0 : 1),
-          total: existing.total + 1,
+      const tableKey = getTableKeyForQuestion(question)
+      const categoryKey = question.operation
+      const existing =
+        userProgress.categoryStats[categoryKey][tableKey] ?? {
+          correct: 0,
+          incorrect: 0,
+          total: 0,
         }
-      }
 
       setUserProgress({
         level: result.newLevel,
         title: result.newTitle,
         totalPoints: userProgress.totalPoints + points,
         xpTowardsNextLevel: result.newXp,
-        tableStats: updatedTableStats,
+        categoryStats: {
+          ...userProgress.categoryStats,
+          [categoryKey]: {
+            ...userProgress.categoryStats[categoryKey],
+            [tableKey]: {
+              correct: existing.correct + (correct ? 1 : 0),
+              incorrect: existing.incorrect + (correct ? 0 : 1),
+              total: existing.total + 1,
+            },
+          },
+        },
       })
 
       if (result.didLevelUp) {
@@ -113,7 +121,21 @@ const PracticePage = () => {
         setTimeout(() => setShowLevelUp(true), 600)
       }
     },
-    [answered, question, hintUsed, streak, sessionStats, userProgress, setStreak, setFeedback, setSessionScore, setSessionStats, setUserProgress, setNewLevel, setShowLevelUp],
+    [
+      answered,
+      question,
+      hintUsed,
+      streak,
+      sessionStats,
+      userProgress,
+      setStreak,
+      setFeedback,
+      setSessionScore,
+      setSessionStats,
+      setUserProgress,
+      setNewLevel,
+      setShowLevelUp,
+    ],
   )
 
   const handleNext = () => {
@@ -171,7 +193,7 @@ const PracticePage = () => {
               onClick={handleHint}
               className="flex-1 h-14 text-base font-semibold border-amber-300 text-amber-600 hover:bg-amber-50 active:scale-95 transition-transform"
             >
-              {hintUsed ? '📋 Toon matrix' : '💡 Hint gebruiken'}
+              {hintUsed ? 'Toon matrix' : 'Hint gebruiken'}
             </Button>
           ) : (
             <Button
@@ -179,18 +201,14 @@ const PracticePage = () => {
               onClick={handleNext}
               className="flex-1 h-14 text-xl font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-md active:scale-95 transition-transform"
             >
-              {questionIndex + 1 >= QUESTIONS_PER_SESSION ? '🏁 Bekijk resultaat' : 'Volgende →'}
+              {questionIndex + 1 >= QUESTIONS_PER_SESSION ? 'Bekijk resultaat' : 'Volgende →'}
             </Button>
           )}
         </div>
       </div>
 
       {showHint && question && (
-        <HintMatrix
-          factorA={question.factorA}
-          factorB={question.factorB}
-          onClose={() => setShowHint(false)}
-        />
+        <HintMatrix question={question} onClose={() => setShowHint(false)} />
       )}
 
       {showLevelUp && (

@@ -5,14 +5,61 @@ import AppLayout from '@/components/layout/AppLayout'
 import PlayerCard from '@/components/progress/PlayerCard'
 import TableProgressCard from '@/components/progress/TableProgressCard'
 import { Button } from '@/components/ui/button'
+import { getCategoryConfig, OPERATION_CATEGORIES } from '@/data/categories'
+import type { OperationCategory, TableStats } from '@/types'
+
+const getPracticedTables = (stats: Record<number, TableStats>) =>
+  Object.entries(stats)
+    .map(([table, tableStats]) => ({ table: Number(table), stats: tableStats }))
+    .sort((a, b) => a.table - b.table)
+
+type CategorySectionProps = {
+  category: OperationCategory
+  stats: Record<number, TableStats>
+  onStart: () => void
+}
+
+const CategorySection = ({ category, stats, onStart }: CategorySectionProps) => {
+  const config = getCategoryConfig(category)
+  const practicedTables = getPracticedTables(stats)
+
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-lg font-bold text-amber-700">{config.label}</h2>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onStart}
+          className="border-amber-300 text-amber-700 hover:bg-amber-50"
+        >
+          Oefenen
+        </Button>
+      </div>
+
+      {practicedTables.length === 0 ? (
+        <div className="text-center py-6 text-amber-400 bg-white/50 rounded-2xl border border-amber-100">
+          <p className="text-base font-medium">Nog geen {config.label.toLowerCase()} geoefend.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3">
+          {practicedTables.map(({ table, stats: tableStats }) => (
+            <TableProgressCard
+              key={`${category}-${table}`}
+              table={table}
+              stats={tableStats}
+              labelPrefix={config.tableLabelPrefix}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  )
+}
 
 const ProgressPage = () => {
   const navigate = useNavigate()
   const progress = useAtomValue(userProgressAtom)
-
-  const practicedTables = Object.entries(progress.tableStats)
-    .map(([table, stats]) => ({ table: Number(table), stats }))
-    .sort((a, b) => a.table - b.table)
 
   return (
     <AppLayout>
@@ -34,31 +81,15 @@ const ProgressPage = () => {
 
         <PlayerCard />
 
-        <div>
-          <h2 className="text-lg font-bold text-amber-700 mb-3">Statistieken per tafel</h2>
-          {practicedTables.length === 0 ? (
-            <div className="text-center py-8 text-amber-400">
-              <p className="text-4xl mb-2">📚</p>
-              <p className="text-base font-medium">Nog geen tafels geoefend.</p>
-              <p className="text-sm">Start een sessie om te beginnen!</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-3">
-              {practicedTables.map(({ table, stats }) => (
-                <TableProgressCard key={table} table={table} stats={stats} />
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="mt-auto">
-          <Button
-            size="lg"
-            onClick={() => navigate('/select')}
-            className="w-full h-16 text-xl font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-md active:scale-95 transition-transform"
-          >
-            ⚔️ Start Oefenen
-          </Button>
+        <div className="space-y-6">
+          {OPERATION_CATEGORIES.map((category) => (
+            <CategorySection
+              key={category}
+              category={category}
+              stats={progress.categoryStats[category]}
+              onStart={() => navigate(`/select/${category}`)}
+            />
+          ))}
         </div>
       </div>
     </AppLayout>
